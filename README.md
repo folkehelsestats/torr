@@ -6,7 +6,7 @@
 ## Tools for Tall om Rapporter in R
 
 This package offers functions designed to simplify and standardize
-analyses related to Tall om reporting nationally and internationally. It
-supports reproducible workflows, ensures compliance with established
+analyses related to *Tall om* reporting nationally and internationally.
+It supports reproducible workflows, ensures compliance with established
 reporting standards, and enables seamless automation of recurring
 analytical tasks.

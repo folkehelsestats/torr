@@ -20,6 +20,6 @@ knitr::opts_chunk$set(
 ## Tools for Tall om Rapporter in R
 
 This package offers functions designed to simplify and standardize analyses
-related to Tall om reporting nationally and internationally. It supports
+related to *Tall om* reporting nationally and internationally. It supports
 reproducible workflows, ensures compliance with established reporting standards,
 and enables seamless automation of recurring analytical tasks.
