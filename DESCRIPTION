@@ -1,0 +1,13 @@
+Package: torr
+Title: Tools for Tall om Rapporter in R
+Version: 0.0.0.9000
+Authors@R: 
+    person("Yusman", "Kamaleri", , "ybkamaleri@gmail.com", role = c("aut", "cre"))
+Description: This package offers functions designed to simplify and standardize analyses
+    related to Tall om reporting nationally and internationally. It supports reproducible
+    workflows, ensures compliance with established reporting standards, and enables seamless
+    automation of recurring analytical tasks.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
