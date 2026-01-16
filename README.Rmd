@@ -2,6 +2,9 @@
 output:
   github_document:
     html_preview: false
+knitr:
+  opts_chunk:
+    eval: false
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -23,3 +26,12 @@ This package offers functions designed to simplify and standardize analyses
 related to *Tall om* reporting nationally and internationally. It supports
 reproducible workflows, ensures compliance with established reporting standards,
 and enables seamless automation of recurring analytical tasks.
+
+## Installation
+
+You can install *torr* package directly from Github:
+
+```{r, eval = FALSE}
+if(!require(pak)) install.packages("pak")
+pak::pkg_install("folkehelsestats/torr")
+```
