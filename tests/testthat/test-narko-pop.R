@@ -1,6 +1,3 @@
-# Test file for create_narko_pop function
-# To be placed in tests/testthat/test-create_narko_pop.R
-
 library(testthat)
 library(data.table)
 
