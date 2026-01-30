@@ -2,99 +2,71 @@
 % Please edit documentation in R/narko-pop.R
 \name{create_narko_pop}
 \alias{create_narko_pop}
-\title{Create Population Indicator Columns for LTP and LYP Analysis}
+\title{Create Population Indicators for LTP and LYP Variables}
 \usage{
-create_narko_pop(data, ltp, lyp, narkvars)
+create_narko_pop(d, types = c("ltp", "lyp"), vars, val, ans = "ans1")
 }
 \arguments{
-\item{data}{A data.table containing the survey response data. Must include an 'ans1' column.}
+\item{d}{A data.table or data.frame. The input dataset.}
 
-\item{ltp}{Character vector of column names representing LTP question variables (e.g., ans2_x variables).}
+\item{types}{A character vector specifying which population types to calculate.
+Options are "ltp" and/or "lyp". Default is \code{c("ltp", "lyp")}.}
 
-\item{lyp}{Character vector of column names representing LYP question variables (e.g., ans3_x variables).}
+\item{vars}{A named or unnamed character vector of variable names corresponding to the types.
+If named, names should match the types. If unnamed, order should match the order in \code{types}.}
 
-\item{narkvars}{Character vector of drug/substance names corresponding to the question variables.
-Used for naming the output columns.}
+\item{val}{A character string used as a suffix for the created variable names.
+New variables will be named \code{ltpPop_<val>} and/or \code{lypPop_<val>}.}
+
+\item{ans}{A character string specifying the name of the answer/response column
+in the dataset for ltp drug question. Default is \code{"ans1"}.}
 }
 \value{
-A data.table (copy of input) with additional binary indicator columns:
-\itemize{
-\item \code{ltpPop_<substance>}: 1 if respondent is in LTP population for that substance, 0 otherwise
-\item \code{lypPop_<substance>}: 1 if respondent is in LYP population for that substance, 0 otherwise
-}
+A data.table with new population indicator columns added. The original
+data.table is not modified (a copy is made internally).
 }
 \description{
-This function creates binary population indicator columns for LTP (Lifetime Prevalence)
-and LYP (Last Year Prevalence) based on response patterns in drug use survey data.
-The population is defined by specific answer combinations across multiple question variables.
+This function generates binary population indicators based on LTP (Lifetime prevalence)
+and/or LYP (Last Year Prevalence) variables. It creates new columns in the dataset with
+values of 1 (in population) or 0 (not in population) based on specified conditions.
 }
 \details{
-\subsection{Population Definition Logic}{
-
-The population indicators are calculated based on the following rules:
-
-\subsection{Core Population (applies to both LTP and LYP):}{
+The function creates population indicators based on the following logic:
 \itemize{
-\item Rule 1: All respondents who answered 1 or 2 ie. Yes and No, in Ans1 are included
-}
-}
-
-\subsection{LTP Population (ltpPop_*):}{
-A respondent is coded as 1 (in population) if:
-\itemize{
-\item They answered 1 or 2 in the corresponding Ans2_x variable, OR
-\item The Ans2_x variable is missing (NA) AND Ans1 is 2
-}
-Otherwise coded as 0 (not in population)
-}
-
-\subsection{LYP Population (lypPop_*):}{
-A respondent is coded as 1 (in population) if:
-\itemize{
-\item They answered 1 or 2 in the corresponding Ans3_x variable, OR
-\item The Ans3_x variable is missing (NA) AND Ans1 is 2
-}
-Otherwise coded as 0 (not in population)
-}
-
-\subsection{Exclusion Rule:}{
-\itemize{
-\item Missing values in ans2_x and ans3_x are excluded (coded as 0) if ans1 is NOT in \{1, 2\}
-}
-}
-}
-}
-\note{
-\itemize{
-\item The function creates a copy of the input data to avoid modifying the original
-\item Requires data.table package
-\item The length of \code{ltp}, \code{lyp}, and \code{narkvars} should match
-\item Column names are automatically generated as \code{ltpPop_<substance>} and \code{lypPop_<substance>}
+\item For LTP: Value is 1 if the LTP variable is 1 or 2, OR if LTP is missing
+and the answer variable ans1 is equals 2. Otherwise 0.
+\item For LYP: Value is 1 if the LYP variable is 1 or 2, OR if LYP is missing
+and LTP equals 2, OR if LYP is missing and the answer variable ans2 is equals 2.
+Otherwise 0.
 }
 }
 \examples{
 \dontrun{
 library(data.table)
 
-# Sample data
+# Create sample data
 dt <- data.table(
-  ans1 = c(1, 2, 3, 1, 2),
-  ans2_cannabis = c(1, 2, 8, NA, 1),
-  ans2_cocaine = c(2, NA, 9, 1, NA),
-  ans3_cannabis = c(1, 2, NA, 1, 2),
-  ans3_cocaine = c(NA, 1, 2, NA, 1)
+  id = 1:5,
+  ltp_var = c(1, 2, NA, 3, NA),
+  lyp_var = c(1, NA, 2, NA, NA),
+  ans1 = c(1, 1, 2, 1, 2)
 )
 
-# Create population indicators
-result <- create_narko_pop(
-  data = dt,
-  ltp = c("ans2_cannabis", "ans2_cocaine"),
-  lyp = c("ans3_cannabis", "ans3_cocaine"),
-  narkvars = c("cannabis", "cocaine")
+# Calculate both LTP and LYP populations
+result <- narko_pop(
+  d = dt,
+  types = c("ltp", "lyp"),
+  vars = c("ltp_var", "lyp_var"),
+  val = "2024"
 )
 
-# Result includes ltpPop_cannabis, ltpPop_cocaine, lypPop_cannabis, lypPop_cocaine
+# Calculate only LTP population
+result_ltp <- narko_pop(
+  d = dt,
+  types = "ltp",
+  vars = "ltp_var",
+  val = "2024"
+)
 }
 
 }
-\concept{population indicator functions}

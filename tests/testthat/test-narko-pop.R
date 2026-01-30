@@ -1,326 +1,176 @@
 library(testthat)
 library(data.table)
 
-# Helper function to create test data
-create_test_data <- function() {
-  data.table(
-    ans1 = c(1, 2, 3, 1, 2, 1, NA, 2),
-    ans2_cannabis = c(1, 2, 8, NA, 1, 2, 9, NA),
-    ans2_cocaine = c(2, NA, 9, 1, NA, 1, 2, 8),
-    ans3_cannabis = c(1, 2, NA, 1, 2, NA, 1, 2),
-    ans3_cocaine = c(NA, 1, 2, NA, 1, 2, NA, NA)
+test_that("create_narko_pop creates correct LTP population indicator", {
+  # Create test data
+  dt <- data.table(
+    id = 1:5,
+    ltp_var = c(1, 2, NA, 3, NA),
+    ans1 = c(1, 1, 2, 1, 2)
   )
-}
-
-test_that("create_narko_pop returns correct structure", {
-  dt <- create_test_data()
 
   result <- create_narko_pop(
-    data = dt,
-    ltp = c("ans2_cannabis", "ans2_cocaine"),
-    lyp = c("ans3_cannabis", "ans3_cocaine"),
-    narkvars = c("cannabis", "cocaine")
+    d = dt,
+    types = "ltp",
+    vars = "ltp_var",
+    val = "test"
   )
 
-  # Check that result is a data.table
-  expect_true(is.data.table(result))
+  # Check that new column was created
+  expect_true("ltpPop_test" %in% names(result))
 
-  # Check that new columns are created
-  expect_true("ltpPop_cannabis" %in% names(result))
-  expect_true("ltpPop_cocaine" %in% names(result))
-  expect_true("lypPop_cannabis" %in% names(result))
-  expect_true("lypPop_cocaine" %in% names(result))
-
-  # Check that original columns are preserved
-  expect_true("ans1" %in% names(result))
-  expect_true("ans2_cannabis" %in% names(result))
-
-  # Check that result has correct number of rows
-  expect_equal(nrow(result), nrow(dt))
+  # Check values
+  expect_equal(result$ltpPop_test, c(1L, 1L, 1L, 0L, 1L))
 })
 
-test_that("create_narko_pop correctly identifies LTP population", {
-  dt <- create_test_data()
+test_that("create_narko_pop creates correct LYP population indicator", {
+  # Create test data
+  dt <- data.table(
+    id = 1:5,
+    ltp_var = c(1, 2, NA, 3, NA),
+    lyp_var = c(1, NA, 2, NA, NA),
+    ans1 = c(1, 1, 2, 1, 2)
+  )
 
   result <- create_narko_pop(
-    data = dt,
-    ltp = c("ans2_cannabis", "ans2_cocaine"),
-    lyp = c("ans3_cannabis", "ans3_cocaine"),
-    narkvars = c("cannabis", "cocaine")
+    d = dt,
+    types = c("ltp", "lyp"),
+    vars = c("ltp_var", "lyp_var"),
+    val = "test"
   )
 
-  # Row 1: ans1=1, ans2_cannabis=1 -> ltpPop=1 (answered 1)
-  expect_equal(result$ltpPop_cannabis[1], 1)
+  # Check that new columns were created
+  expect_true("lypPop_test" %in% names(result))
+  expect_true("ltpPop_test" %in% names(result))
 
-  # Row 2: ans1=2, ans2_cannabis=2 -> ltpPop=1 (answered 2)
-  expect_equal(result$ltpPop_cannabis[2], 1)
-
-  # Row 3: ans1=3, ans2_cannabis=8 -> ltpPop=0 (not 1 or 2, ans1 not 2)
-  expect_equal(result$ltpPop_cannabis[3], 0)
-
-  # Row 4: ans1=1, ans2_cannabis=NA -> ltpPop=0 (NA but ans1 is not 2)
-  expect_equal(result$ltpPop_cannabis[4], 0)
-
-  # Row 5: ans1=2, ans2_cannabis=1 -> ltpPop=1 (answered 1)
-  expect_equal(result$ltpPop_cannabis[5], 1)
-
-  # Row 8: ans1=2, ans2_cannabis=NA -> ltpPop=1 (NA and ans1=2)
-  expect_equal(result$ltpPop_cannabis[8], 1)
+  # Check LYP values
+  expect_equal(result$lypPop_test, c(1L, 1L, 1L, 0L, 1L))
 })
 
-test_that("create_narko_pop correctly identifies LYP population", {
-  dt <- create_test_data()
+test_that("create_narko_pop works with both ltp and lyp", {
+  dt <- data.table(
+    ltp_var = c(1, 2, NA, 3),
+    lyp_var = c(1, NA, 2, NA),
+    ans1 = c(1, 1, 2, 1)
+  )
 
   result <- create_narko_pop(
-    data = dt,
-    ltp = c("ans2_cannabis", "ans2_cocaine"),
-    lyp = c("ans3_cannabis", "ans3_cocaine"),
-    narkvars = c("cannabis", "cocaine")
+    d = dt,
+    types = c("ltp", "lyp"),
+    vars = c("ltp_var", "lyp_var"),
+    val = "2024"
   )
 
-  # Row 1: ans1=1, ans3_cannabis=1 -> lypPop=1 (answered 1)
-  expect_equal(result$lypPop_cannabis[1], 1)
-
-  # Row 2: ans1=2, ans3_cannabis=2 -> lypPop=1 (answered 2)
-  expect_equal(result$lypPop_cannabis[2], 1)
-
-  # Row 3: ans1=3, ans3_cannabis=NA -> lypPop=0 (NA but ans1 is not 2)
-  expect_equal(result$lypPop_cannabis[3], 0)
-
-  # Row 6: ans1=1, ans3_cannabis=NA -> lypPop=0 (NA but ans1 is not 2)
-  expect_equal(result$lypPop_cannabis[6], 0)
-
-  # Row 8: ans1=2, ans3_cannabis=2 -> lypPop=1 (answered 2)
-  expect_equal(result$lypPop_cannabis[8], 1)
+  expect_true(all(c("ltpPop_2024", "lypPop_2024") %in% names(result)))
 })
 
-test_that("create_narko_pop handles cocaine columns correctly", {
-  dt <- create_test_data()
-
-  result <- create_narko_pop(
-    data = dt,
-    ltp = c("ans2_cannabis", "ans2_cocaine"),
-    lyp = c("ans3_cannabis", "ans3_cocaine"),
-    narkvars = c("cannabis", "cocaine")
+test_that("create_narko_pop doesn't modify original data.table", {
+  dt <- data.table(
+    ltp_var = c(1, 2, NA),
+    ans1 = c(1, 1, 2)
   )
 
-  # Row 1: ans1=1, ans2_cocaine=2 -> ltpPop=1
-  expect_equal(result$ltpPop_cocaine[1], 1)
-
-  # Row 2: ans1=2, ans2_cocaine=NA -> ltpPop=1 (NA and ans1=2)
-  expect_equal(result$ltpPop_cocaine[2], 1)
-
-  # Row 2: ans1=2, ans3_cocaine=1 -> lypPop=1
-  expect_equal(result$lypPop_cocaine[2], 1)
-
-  # Row 8: ans1=2, ans3_cocaine=NA -> lypPop=1 (NA and ans1=2)
-  expect_equal(result$lypPop_cocaine[8], 1)
-})
-
-test_that("create_narko_pop does not modify original data", {
-  dt <- create_test_data()
-  original_ncol <- ncol(dt)
   original_names <- names(dt)
 
   result <- create_narko_pop(
-    data = dt,
-    ltp = c("ans2_cannabis", "ans2_cocaine"),
-    lyp = c("ans3_cannabis", "ans3_cocaine"),
-    narkvars = c("cannabis", "cocaine")
+    d = dt,
+    types = "ltp",
+    vars = "ltp_var",
+    val = "test"
   )
 
-  # Check original data is unchanged
-  expect_equal(ncol(dt), original_ncol)
+  # Original should be unchanged
   expect_equal(names(dt), original_names)
-
-  # Check that result is different from original
-  expect_true(ncol(result) > ncol(dt))
+  # Result should have new column
+  expect_true("ltpPop_test" %in% names(result))
 })
 
-test_that("create_narko_pop throws error for non-data.table input", {
+test_that("create_narko_pop works with custom ans column", {
+  dt <- data.table(
+    ltp_var = c(1, NA, 3),
+    custom_ans = c(1, 2, 1)
+  )
+
+  result <- create_narko_pop(
+    d = dt,
+    types = "ltp",
+    vars = "ltp_var",
+    val = "test",
+    ans = "custom_ans"
+  )
+
+  expect_equal(result$ltpPop_test, c(1L, 1L, 0L))
+})
+
+test_that("create_narko_pop handles edge cases correctly", {
+  dt <- data.table(
+    ltp_var = c(1, 2, 0, NA, NA, 3),
+    lyp_var = c(NA, 1, 2, NA, NA, 0),
+    ans1 = c(1, 1, 1, 2, 1, 2)
+  )
+
+  result <- create_narko_pop(
+    d = dt,
+    types = c("ltp", "lyp"),
+    vars = c("ltp_var", "lyp_var"),
+    val = "edge"
+  )
+
+  # Row 1: ltp=1, lyp=NA, ltp=1 -> lyp should be 0 (because ltp != 2)
+  expect_equal(result$lypPop_edge[1], 0L)
+
+  # Row 4: ltp=NA, lyp=NA, ans1=2 -> both should be 1
+  expect_equal(result$ltpPop_edge[4], 1L)
+  expect_equal(result$lypPop_edge[4], 1L)
+})
+
+test_that("create_narko_pop validates input correctly", {
+  dt <- data.table(ltp_var = 1:3, ans1 = 1:3)
+
+  # Invalid types
+  expect_error(
+    create_narko_pop(dt, types = "invalid", vars = "ltp_var", val = "test"),
+    "must contain only 'ltp' and/or 'lyp'"
+  )
+
+  # Mismatched vars and types length
+  expect_error(
+    create_narko_pop(dt, types = c("ltp", "lyp"), vars = "ltp_var", val = "test"),
+    "Length of 'vars' must equal length of 'types'"
+  )
+
+  # Missing ans column
+  expect_error(
+    create_narko_pop(dt, types = "ltp", vars = "ltp_var", val = "test", ans = "missing"),
+    "Column 'missing' not found"
+  )
+
+  # Missing variable column
+  expect_error(
+    create_narko_pop(dt, types = "ltp", vars = "missing_var", val = "test"),
+    "Column 'missing_var' not found"
+  )
+
+  # Invalid input type
+  expect_error(
+    create_narko_pop(list(a = 1), types = "ltp", vars = "ltp_var", val = "test"),
+    "must be a data.table or data.frame"
+  )
+})
+
+test_that("create_narko_pop works with data.frame input", {
   df <- data.frame(
-    ans1 = c(1, 2),
-    ans2_cannabis = c(1, 2),
-    ans3_cannabis = c(1, 2)
-  )
-
-  expect_error(
-    create_narko_pop(
-      data = df,
-      ltp = "ans2_cannabis",
-      lyp = "ans3_cannabis",
-      narkvars = "cannabis"
-    ),
-    "'data' must be a data.table"
-  )
-})
-
-test_that("create_narko_pop throws error when ans1 column is missing", {
-  dt <- data.table(
-    ans2_cannabis = c(1, 2),
-    ans3_cannabis = c(1, 2)
-  )
-
-  expect_error(
-    create_narko_pop(
-      data = dt,
-      ltp = "ans2_cannabis",
-      lyp = "ans3_cannabis",
-      narkvars = "cannabis"
-    ),
-    "'data' must contain 'ans1' column"
-  )
-})
-
-test_that("create_narko_pop throws error for mismatched vector lengths", {
-  dt <- create_test_data()
-
-  # More ltp variables than narkvars
-  expect_error(
-    create_narko_pop(
-      data = dt,
-      ltp = c("ans2_cannabis", "ans2_cocaine"),
-      lyp = c("ans3_cannabis"),
-      narkvars = c("cannabis", "cocaine")
-    ),
-    "'ltp', 'lyp', and 'narkvars' must have the same length"
-  )
-
-  # More narkvars than ltp variables
-  expect_error(
-    create_narko_pop(
-      data = dt,
-      ltp = c("ans2_cannabis"),
-      lyp = c("ans3_cannabis"),
-      narkvars = c("cannabis", "cocaine")
-    ),
-    "'ltp', 'lyp', and 'narkvars' must have the same length"
-  )
-})
-
-test_that("create_narko_pop throws error for missing columns", {
-  dt <- create_test_data()
-
-  # Missing LTP column
-  expect_error(
-    create_narko_pop(
-      data = dt,
-      ltp = c("ans2_cannabis", "ans2_heroin"),
-      lyp = c("ans3_cannabis", "ans3_cocaine"),
-      narkvars = c("cannabis", "heroin")
-    ),
-    "LTP columns not found in data: ans2_heroin"
-  )
-
-  # Missing LYP column
-  expect_error(
-    create_narko_pop(
-      data = dt,
-      ltp = c("ans2_cannabis", "ans2_cocaine"),
-      lyp = c("ans3_cannabis", "ans3_heroin"),
-      narkvars = c("cannabis", "heroin")
-    ),
-    "LYP columns not found in data: ans3_heroin"
-  )
-})
-
-test_that("create_narko_pop works with single substance", {
-  dt <- create_test_data()
-
-  result <- create_narko_pop(
-    data = dt,
-    ltp = "ans2_cannabis",
-    lyp = "ans3_cannabis",
-    narkvars = "cannabis"
-  )
-
-  expect_true("ltpPop_cannabis" %in% names(result))
-  expect_true("lypPop_cannabis" %in% names(result))
-  expect_false("ltpPop_cocaine" %in% names(result))
-  expect_false("lypPop_cocaine" %in% names(result))
-})
-
-test_that("create_narko_pop produces binary outputs only", {
-  dt <- create_test_data()
-
-  result <- create_narko_pop(
-    data = dt,
-    ltp = c("ans2_cannabis", "ans2_cocaine"),
-    lyp = c("ans3_cannabis", "ans3_cocaine"),
-    narkvars = c("cannabis", "cocaine")
-  )
-
-  # Check all population columns are 0 or 1
-  expect_true(all(result$ltpPop_cannabis %in% c(0, 1)))
-  expect_true(all(result$ltpPop_cocaine %in% c(0, 1)))
-  expect_true(all(result$lypPop_cannabis %in% c(0, 1)))
-  expect_true(all(result$lypPop_cocaine %in% c(0, 1)))
-})
-
-test_that("create_narko_pop handles all NA values correctly", {
-  dt <- data.table(
-    ans1 = c(1, 2, 8),
-    ans2_cannabis = c(NA, NA, NA),
-    ans3_cannabis = c(NA, NA, NA)
+    ltp_var = c(1, 2, NA),
+    ans1 = c(1, 1, 2)
   )
 
   result <- create_narko_pop(
-    data = dt,
-    ltp = "ans2_cannabis",
-    lyp = "ans3_cannabis",
-    narkvars = "cannabis"
+    d = df,
+    types = "ltp",
+    vars = "ltp_var",
+    val = "test"
   )
 
-  # Row 1: ans1=1, ans2=NA -> ltpPop=0
-  expect_equal(result$ltpPop_cannabis[1], 0)
-
-  # Row 2: ans1=2, ans2=NA -> ltpPop=1
-  expect_equal(result$ltpPop_cannabis[2], 1)
-
-  # Row 3: ans1=3, ans2=NA -> ltpPop=0
-  expect_equal(result$ltpPop_cannabis[3], 0)
-})
-
-test_that("create_narko_pop preserves row order", {
-  dt <- create_test_data()
-  dt$id <- 1:nrow(dt)
-
-  result <- create_narko_pop(
-    data = dt,
-    ltp = c("ans2_cannabis", "ans2_cocaine"),
-    lyp = c("ans3_cannabis", "ans3_cocaine"),
-    narkvars = c("cannabis", "cocaine")
-  )
-
-  expect_equal(result$id, dt$id)
-  expect_equal(result$ans1, dt$ans1)
-})
-
-test_that("create_narko_pop handles NA in ans2 and ans3 correctly", {
-  dt <- data.table(
-    ans1 = c(1, 2, 1, 8),
-    ans2_cannabis = c(1, 2, NA, NA),
-    ans3_cannabis = c(1, NA, 2, NA)
-  )
-
-  result <- create_narko_pop(
-    data = dt,
-    ltp = "ans2_cannabis",
-    lyp = "ans3_cannabis",
-    narkvars = "cannabis"
-  )
-
-  # When ans1 is NA, should be treated as not in population (0)
-  # Row 3: ans1=NA, ans2_cannabis=2 -> ltpPop=0 (ans1 is not 2)
-  expect_equal(result$ltpPop_cannabis[3], 0)
-
-  # Row 4: ans1=NA, ans2_cannabis=NA -> ltpPop=0 (ans1 is not 2)
-  expect_equal(result$ltpPop_cannabis[4], 0)
-
-  expect_equal(result$lypPop_cannabis[3], 1)
-  expect_equal(result$lypPop_cannabis[4], 0)
-
-  # All values should be 0 or 1, no NAs
-  expect_true(all(result$ltpPop_cannabis %in% c(0, 1)))
-  expect_true(all(result$lypPop_cannabis %in% c(0, 1)))
+  expect_s3_class(result, "data.table")
+  expect_true("ltpPop_test" %in% names(result))
 })
