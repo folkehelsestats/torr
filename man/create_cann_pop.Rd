@@ -73,7 +73,7 @@ dt <- data.table(
 # Create all three indicators (default)
 result <- create_cann_pop(
   dt = dt,
-  vars = c("lifetime_use", "year_use", "month_use"),
+  vars = c("can1", "can6", "can10"),
   value = "cannabis"
 )
 
@@ -97,8 +97,8 @@ result <- create_cann_pop(
 result <- create_cann_pop(
   dt = dt,
   types = c("ltp", "lyp", "lmp"),
-  vars = c("lifetime_use", "year_use", "month_use"),
-  value = "alcohol"
+  vars = c("can1", "can6", "can10"),
+  value = "mdma"
 )
 }
 

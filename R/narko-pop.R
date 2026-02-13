@@ -123,3 +123,103 @@ create_narko_pop <- function(d, types = c("ltp", "lyp"), vars, val, ans = "ans1"
 
   return(d)
 }
+
+
+
+#' Apply `create_narko_pop()` Over Multiple Specifications
+#'
+#' @description
+#' A convenience wrapper that applies [torr::create_narko_pop()] repeatedly to
+#' the same dataset for a set of `(vars, val)` specifications. This helps avoid
+#' writing multiple sequential calls and keeps analysis code concise and
+#' consistent.
+#'
+#' @param D
+#'   A data.frame or data.table to be augmented. The object is passed to and
+#'   returned from each call to [torr::create_narko_pop()].
+#' @param vars_list
+#'   A list where each element is a character vector of variable names to pass
+#'   as `vars` to [torr::create_narko_pop()]. For example:
+#'   `list(c("ans2_a","ans3_1"), c("ans2_b","ans3_2"))`.
+#' @param vals
+#'   A character vector of the same length as `vars_list`. Each element is
+#'   passed as `val` to [torr::create_narko_pop()] for the corresponding
+#'   `vars_list` entry.
+#' @param ...
+#'   Additional arguments passed through to [torr::create_narko_pop()], if
+#'   supported by that function (e.g., `types`, `ans`, etc.).
+#'
+#' @details
+#' Internally, the function loops once over `seq_along(vals)`, updating `D`
+#' in-place for each `(vars, val)` pair by calling [torr::create_narko_pop()].
+#' The order of `vars_list` / `vals` determines the order of application.
+#'
+#' Basic validation is performed to ensure:
+#' - `vars_list` is a list.
+#' - `vals` is a character vector with the same length as `vars_list`.
+#' - Each element of `vars_list` is a non-empty character vector.
+#'
+#' @return
+#' Returns the updated object `D` after all calls to
+#' [torr::create_narko_pop()] have been applied.
+#'
+#' @seealso
+#' [torr::create_narko_pop()]
+#'
+#' @examples
+#' \dontrun{
+#' # Example specification (mirrors repeated calls):
+#' vars_list <- list(
+#'   c("ans2_a", "ans3_1"),
+#'   c("ans2_b", "ans3_2"),
+#'   c("ans2_c", "ans3_3"),
+#'   c("ans2_e", "ans3_5"),
+#'   c("ans2_f", "ans3_6"),
+#'   c("ans2_g", "ans3_7"),
+#'   c("ans2_h", "ans3_8")
+#' )
+#' vals <- c("kokain", "mdma", "amfetaminer", "heroin", "ghb", "lsd", "annet")
+#'
+#' DD2 <- torr::create_narko_pop_vec(DD, vars_list, vals)
+#' }
+#'
+#' @export
+create_narko_pop_vec <- function(D, vars_list, vals, ...) {
+  # --- Validation -------------------------------------------------------------
+  if (!is.list(vars_list)) {
+    stop("`vars_list` must be a list of character vectors.", call. = FALSE)
+  }
+  if (!is.character(vals)) {
+    stop("`vals` must be a character vector.", call. = FALSE)
+  }
+  if (length(vars_list) != length(vals)) {
+    stop("`vars_list` and `vals` must have the same length.", call. = FALSE)
+  }
+  if (length(vars_list) == 0L) {
+    # Nothing to do; return D unchanged
+    return(D)
+  }
+
+  # Check each element of vars_list
+  bad_idx <- vapply(
+    vars_list,
+    FUN = function(x) !(is.character(x) && length(x) >= 1L && all(nzchar(x))),
+    FUN.VALUE = logical(1)
+  )
+  if (any(bad_idx)) {
+    idx <- which(bad_idx)[1L]
+    stop(
+      sprintf(
+        "`vars_list[[%d]]` must be a non-empty character vector with non-empty names.",
+        idx
+      ),
+      call. = FALSE
+    )
+  }
+
+  # --- Iteration --------------------------------------------------------------
+  for (i in seq_along(vals)) {
+    D <- torr::create_narko_pop(D, vars = vars_list[[i]], val = vals[i], ...)
+  }
+  D
+}
