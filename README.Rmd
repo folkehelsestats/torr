@@ -13,12 +13,12 @@ knitr:
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.path = "man/img/README-",
+  fig.path = "man/figures/README-",
   out.width = "100%"
 )
 ```
 
-# torr <img src='man/img/torr-logo.png' align="right" width="110" height="138" />
+# torr <img src='man/figures/logo.png' align="right" width="110" height="138" />
 
 ## Tools for Tall om Rapporter in R
 

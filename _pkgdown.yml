@@ -1,0 +1,6 @@
+url: https://github.com/folkehelsestats/torr
+
+template:
+  bootstrap: 5
+  logo: man/figures/logo.png
+  favicon: man/figures/favicon.png  # or .ico; see below to generate
