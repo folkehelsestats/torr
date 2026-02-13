@@ -1,0 +1,48 @@
+# torr
+
+## Tools for Tall om Rapporter in R
+
+This package offers functions designed to simplify and standardize
+analyses related to *Tall om* reporting nationally and internationally.
+It supports reproducible workflows, ensures compliance with established
+reporting standards, and enables seamless automation of recurring
+analytical tasks.
+
+## Installation
+
+You can install *torr* package directly from Github:
+
+``` r
+if(!require(pak)) install.packages("pak")
+pak::pkg_install("folkehelsestats/torr")
+```
+
+# Package index
+
+## All functions
+
+- [`create_cann_pop()`](https://github.com/folkehelsestats/torr/reference/create_cann_pop.md)
+  : Create Cannabis Population Indicators
+
+- [`create_codebook()`](https://github.com/folkehelsestats/torr/reference/create_codebook.md)
+  : Create an interactive codebook using DT
+
+- [`create_narko_pop()`](https://github.com/folkehelsestats/torr/reference/create_narko_pop.md)
+  : Create Population Indicators for LTP and LYP Variables
+
+- [`create_narko_pop_vec()`](https://github.com/folkehelsestats/torr/reference/create_narko_pop_vec.md)
+  :
+
+  Apply
+  [`create_narko_pop()`](https://github.com/folkehelsestats/torr/reference/create_narko_pop.md)
+  Over Multiple Specifications
+
+- [`extract_attr()`](https://github.com/folkehelsestats/torr/reference/extract_attr.md)
+  : Extract variable metadata from a dataset
+
+- [`group_age()`](https://github.com/folkehelsestats/torr/reference/group_age.md)
+  : Categorize Age Variable into Groups
+
+- [`group_age_standard()`](https://github.com/folkehelsestats/torr/reference/group_age_standard.md)
+  : Create Standard Demographic Age Groups
+
