@@ -87,7 +87,7 @@ The function uses base R's [`cut()`](https://rdrr.io/r/base/cut.html)
 function internally to create the age categories. Common age groupings
 in demographic analysis include:
 
-- Pediatric: 0-18 years
+- Younger: 0-18 years
 
 - Young adult: 19-30 years
 

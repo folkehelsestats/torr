@@ -22,10 +22,10 @@ group_age_standard(
 \item{type}{Character string. Type of age grouping. Options are:
 \itemize{
 \item "standard": 0-17, 18-34, 35-54, 55-74, 75+
-\item "pediatric": 0-2, 3-5, 6-12, 13-17, 18+
+\item "young": 0-2, 3-5, 6-12, 13-17, 18+
 \item "young30": 16-20, 21-25, 26-30, 31+
 \item "young34": 16-20, 21-25, 26-30, 31-34, 35+
-\item "geriatric": <65, 65-74, 75-84, 85+
+\item "older": <65, 65-74, 75-84, 85+
 \item "working": <18, 18-64, 65+
 \item "unodc": 16-17, 18-24, 25-34, 35-64, 65+
 \item "rusund": 16-24, 25-34, 35-44, 45-54, 55-64, 65-79

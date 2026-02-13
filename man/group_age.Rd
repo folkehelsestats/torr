@@ -60,7 +60,7 @@ flexible options for defining age categories commonly used in demographic analys
 The function uses base R's \code{cut()} function internally to create the age categories.
 Common age groupings in demographic analysis include:
 \itemize{
-\item Pediatric: 0-18 years
+\item Younger: 0-18 years
 \item Young adult: 19-30 years
 \item Middle age: 31-50 years
 \item Older adult: 51+ years

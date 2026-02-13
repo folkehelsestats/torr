@@ -31,7 +31,7 @@
 #' The function uses base R's \code{cut()} function internally to create the age categories.
 #' Common age groupings in demographic analysis include:
 #' \itemize{
-#'   \item Pediatric: 0-18 years
+#'   \item Younger: 0-18 years
 #'   \item Young adult: 19-30 years
 #'   \item Middle age: 31-50 years
 #'   \item Older adult: 51+ years
@@ -255,10 +255,10 @@ group_age <- function(dt, var, breaks,
 #' @param type Character string. Type of age grouping. Options are:
 #'   \itemize{
 #'     \item "standard": 0-17, 18-34, 35-54, 55-74, 75+
-#'     \item "pediatric": 0-2, 3-5, 6-12, 13-17, 18+
+#'     \item "young": 0-2, 3-5, 6-12, 13-17, 18+
 #'     \item "young30": 16-20, 21-25, 26-30, 31+
 #'     \item "young34": 16-20, 21-25, 26-30, 31-34, 35+
-#'     \item "geriatric": <65, 65-74, 75-84, 85+
+#'     \item "older": <65, 65-74, 75-84, 85+
 #'     \item "working": <18, 18-64, 65+
 #'     \item "unodc": 16-17, 18-24, 25-34, 35-64, 65+
 #'     \item "rusund": 16-24, 25-34, 35-44, 45-54, 55-64, 65-79
@@ -298,7 +298,7 @@ group_age_standard <- function(dt, var, type = "standard", new_var = NULL,
       breaks = c(0, 18, 35, 55, 75, Inf),
       labels = c("0-17", "18-34", "35-54", "55-74", "75+")
     ),
-    pediatric = list(
+    young = list(
       breaks = c(0, 3, 6, 13, 18, Inf),
       labels = c("0-2", "3-5", "6-12", "13-17", "18+")
     ),
@@ -310,7 +310,7 @@ group_age_standard <- function(dt, var, type = "standard", new_var = NULL,
       breaks = c(16, 21, 26, 31, 35, Inf),
       labels = c("16-20", "21-25", "26-30", "31-34", "35+")
     ),
-    geriatric = list(
+    older = list(
       breaks = c(0, 65, 75, 85, Inf),
       labels = c("<65", "65-74", "75-84", "85+")
     ),
