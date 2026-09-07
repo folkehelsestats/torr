@@ -33,12 +33,13 @@
 #'   to calculate prevalence separately for each year.
 #' @param ci_level Numeric value between 0 and 1 specifying the confidence
 #'   level for the confidence intervals. The default is `0.95`.
+#' @param digits Number of digits to show for the prevalence. Default is 1. 
 #'
 #' @return A data frame containing the prevalence estimates and confidence
-#'   intervals produced by [survey::svyby()]. The prevalence estimate is
-#'   the survey-weighted mean of `outcome_var`. For a 0/1 outcome this is
-#'   equivalent to prevalence. Confidence interval columns are typically
-#'   named `ci.2.5` and `ci.97.5` for a 95\% confidence interval.
+#'   intervals produced by [survey::svyby()]. The prevalence estimate is the
+#'   survey-weighted mean of `outcome_var`. For a 0/1 outcome this is equivalent
+#'   to prevalence. Confidence interval columns are typically named `ci.2.5` and
+#'   `ci.97.5` for a 95\% confidence interval. The results are in precentage.
 #'
 #' @details
 #' The `denominator` argument defines the analysis population for the
@@ -151,14 +152,15 @@ calc_prevalence <- function(data,
                             psu = NULL,
                             strata = NULL,
                             by = NULL,
-                            rolling_year = 3,
-                            ci_level = 0.95) {
+                            rolling_year = 1,
+                            ci_level = 0.95,
+                            digits = 1) {
 
   # ------------------------------------------------------------------
   # Validate the main function arguments.
   # ------------------------------------------------------------------
 
-  if (!is.data.frame(data)) {
+  if (!inherits(data, "data.frame")) {
     stop("'data' must be a data.frame or data.table.")
   }
 
@@ -220,7 +222,7 @@ calc_prevalence <- function(data,
     denominator,
     year_var,
     outcome_var,
-#     weight_var,
+    weight_var,
     psu,
     strata,
     by
@@ -559,6 +561,7 @@ calc_prevalence <- function(data,
   # ------------------------------------------------------------------
   # Return the prevalence estimates and confidence intervals.
   # ------------------------------------------------------------------
-
-  result
+  data.table::setDT(result)
+  ciCols <- tail(names(result), 3)
+  result[, (ciCols) := lapply(.SD, function(x) round(x * 100, digits = digits)), .SDcols = ciCols]
 }
