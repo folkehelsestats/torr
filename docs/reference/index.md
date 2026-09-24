@@ -2,6 +2,9 @@
 
 ## All functions
 
+- [`calc_prevalence()`](https://github.com/folkehelsestats/torr/reference/calc_prevalence.md)
+  : Calculate prevalence and confidence intervals
+
 - [`create_cann_pop()`](https://github.com/folkehelsestats/torr/reference/create_cann_pop.md)
   : Create Cannabis Population Indicators
 
@@ -26,3 +29,6 @@
 
 - [`group_age_standard()`](https://github.com/folkehelsestats/torr/reference/group_age_standard.md)
   : Create Standard Demographic Age Groups
+
+- [`is_case()`](https://github.com/folkehelsestats/torr/reference/is_case.md)
+  : Create a binary indicator from one or more source variables

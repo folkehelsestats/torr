@@ -142,7 +142,12 @@ data.table operations.
 
 ``` r
 library(data.table)
-#> Warning: package 'data.table' was built under R version 4.5.2
+#> Warning: package 'data.table' was built under R version 4.6.1
+#> 
+#> Attaching package: 'data.table'
+#> The following object is masked from 'package:base':
+#> 
+#>     %notin%
 
 # Create sample data
 dt <- data.table(
@@ -181,5 +186,5 @@ dt_clean <- group_age(dt_survey, "age",
 table(dt_clean$age_group, useNA = "ifany")
 #> 
 #>       Youth Young Adult  Middle Age      Senior        <NA> 
-#>           0          16          26          48          10 
+#>           0          17          26          47          10 
 ```
