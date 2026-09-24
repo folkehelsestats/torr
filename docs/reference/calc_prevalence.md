@@ -93,7 +93,8 @@ intervals produced by
 [`survey::svyby()`](https://rdrr.io/pkg/survey/man/svyby.html). The
 prevalence estimate is the survey-weighted mean of `outcome_var`. For a
 0/1 outcome this is equivalent to prevalence. Confidence interval
-columns are typically named `ci.2.5` and `ci.97.5` for a 95\\
+columns are typically named `ci.2.5` and `ci.97.5` for a \\95\\\\
+confidence interval. The results are in precentage.
 
 ## Details
 

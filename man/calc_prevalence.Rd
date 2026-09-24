@@ -64,7 +64,7 @@ A data frame containing the prevalence estimates and confidence
 intervals produced by \code{\link[survey:svyby]{survey::svyby()}}. The prevalence estimate is the
 survey-weighted mean of \code{outcome_var}. For a 0/1 outcome this is equivalent
 to prevalence. Confidence interval columns are typically named \code{ci.2.5} and
-\code{ci.97.5} for a 95\\% confidence interval. The results are in precentage.
+\code{ci.97.5} for a \eqn{95\%} confidence interval. The results are in precentage.
 }
 \description{
 Calculates survey-weighted prevalence estimates and confidence intervals
