@@ -344,3 +344,22 @@ testthat::test_that("PSU and strata can be supplied", {
   testthat::expect_equal(nrow(result$estimates), 1)
   testthat::expect_true(is.finite(result$estimates$prevalence))
 })
+
+# ------------------------------------------------------------------------------
+# Test for helper functions
+# ------------------------------------------------------------------------------
+test_that("Wald test gives z = 2 and p about 0.0455", {
+  w <- .prev_wald_test(diff = 0.02, variance = 0.0001)
+  expect_equal(w$z, 2)
+  expect_equal(w$p_value, 0.0455, tolerance = 1e-3)
+})
+
+test_that("rolling periods need complete years", {
+  p <- .prev_rolling_periods(c(2013, 2014, 2016), rolling_year = 2)
+  expect_equal(names(p), "2013-2014")      # 2015 is missing
+})
+
+test_that("GLS with diagonal V recovers an exact line", {
+  g <- .prev_gls_line(y = c(.01, .02, .03), V = diag(1e-6, 3), time = 1:3)
+  expect_equal(g$slope, 0.01)
+})
