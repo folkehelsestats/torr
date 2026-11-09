@@ -96,11 +96,21 @@ non-matches.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Single source variable</span></span></span>
 <span class="r-in"><span><span class="fu">is_case</span><span class="op">(</span><span class="va">dt</span>, <span class="st">"var1"</span>, <span class="st">"case1"</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in is_case(dt, "var1", "case1"):</span> could not find function "is_case"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     var1  var2 case1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;num&gt; &lt;num&gt; &lt;int&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1     0     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:     0     1     0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:    NA     1     0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4:     0    NA     0</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Multiple source variables</span></span></span>
 <span class="r-in"><span><span class="fu">is_case</span><span class="op">(</span><span class="va">dt</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"var1"</span>, <span class="st">"var2"</span><span class="op">)</span>, <span class="st">"case2"</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in is_case(dt, c("var1", "var2"), "case2"):</span> could not find function "is_case"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     var1  var2 case2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;num&gt; &lt;num&gt; &lt;int&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1     0     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:     0     1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:    NA     1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4:     0    NA     0</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

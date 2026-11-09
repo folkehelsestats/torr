@@ -3,7 +3,8 @@
 ## All functions
 
 - [`calc_prevalence()`](https://github.com/folkehelsestats/torr/reference/calc_prevalence.md)
-  : Calculate prevalence and confidence intervals
+  : Calculate prevalence, confidence intervals, significance tests and
+  trend
 
 - [`create_cann_pop()`](https://github.com/folkehelsestats/torr/reference/create_cann_pop.md)
   : Create Cannabis Population Indicators

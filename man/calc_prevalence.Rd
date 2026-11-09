@@ -2,7 +2,7 @@
 % Please edit documentation in R/prevalence.R
 \name{calc_prevalence}
 \alias{calc_prevalence}
-\title{Calculate prevalence and confidence intervals}
+\title{Calculate prevalence, confidence intervals, significance tests and trend}
 \usage{
 calc_prevalence(
   data,
@@ -14,8 +14,14 @@ calc_prevalence(
   strata = NULL,
   by = NULL,
   rolling_year = 1,
+  periods = NULL,
   ci_level = 0.95,
-  digits = 1
+  digits = 1,
+  test = TRUE,
+  compare_var = "rolling_period",
+  compare_to = "first",
+  p_adjust = "none",
+  trend = TRUE
 )
 }
 \arguments{
@@ -28,18 +34,19 @@ are included in the analysis population; observations with
 defines the population to which the prevalence estimate applies.}
 
 \item{year_var}{Character string giving the name of the variable
-containing the calendar year.}
+containing the calendar year (whole numbers).}
 
 \item{outcome_var}{Character string giving the name of the binary
 outcome variable. The outcome must be coded as \code{0} and \code{1}, where
 \code{1} indicates the outcome of interest.}
 
-\item{weight_var}{Character string giving the name of the survey
-weight variable. If NULL then run an uweighted prevalence. Default is NULL.}
+\item{weight_var}{Optional character string giving the name of the survey
+weight variable. If \code{NULL}, an unweighted prevalence is calculated.
+Default is \code{NULL}.}
 
 \item{psu}{Optional character string giving the name of the primary
-sampling unit (PSU) variable. If \code{NULL} (the default), \code{ids = ~1}
-is used and no clustering is specified.}
+sampling unit (PSU) variable. If \code{NULL} (the default), every observation
+is treated as its own sampling unit.}
 
 \item{strata}{Optional character string giving the name of the survey
 stratum variable. If \code{NULL} (the default), no stratification is
@@ -48,86 +55,195 @@ specified.}
 \item{by}{Optional character vector giving the names of variables
 defining subgroups for which prevalence should be calculated.
 If \code{NULL}, estimates are calculated for the entire analysis
-population within each rolling period.}
+population within each period.}
 
 \item{rolling_year}{Positive integer specifying the number of calendar years
-included in each rolling period. The default is \code{3}. Use \code{rolling_year = 1}
-to calculate prevalence separately for each year.}
+included in each rolling period. The default is \code{1}, i.e. prevalence is
+calculated separately for each year. Use e.g. \code{rolling_year = 3} for
+three-year rolling periods. Ignored (with a warning if it is not \code{1})
+when \code{periods} is supplied.}
+
+\item{periods}{Optional named list defining your own periods, instead of
+rolling periods. Each element is a vector of calendar years and the
+element name is the label used for that period in the output, e.g.
+\code{list("2013-2015" = 2013:2015, "2016-2025" = 2016:2025)}. The periods are
+kept in the order you give them, which matters for \code{compare_to = "first"},
+\code{compare_to = "previous"} and the trend. Periods may have different
+lengths and may overlap. If \code{NULL} (the default), rolling periods
+defined by \code{rolling_year} are used. No recoding of the year variable is
+needed.}
 
 \item{ci_level}{Numeric value between 0 and 1 specifying the confidence
-level for the confidence intervals. The default is \code{0.95}.}
+level for the confidence intervals. The default is \code{0.95}. The
+significance level used in the tests is \code{alpha = 1 - ci_level}.}
 
-\item{digits}{Number of digits to show for the prevalence. Default is 1.}
+\item{digits}{Number of digits used when rounding the results (percentages
+and percentage-point differences). Default is \code{1}. P-values are not
+rounded.}
+
+\item{test}{Logical. If \code{TRUE} (the default), significance tests between
+periods or subgroups are calculated and returned in \verb{$tests}. If
+\code{FALSE}, \verb{$tests} is \code{NULL}.}
+
+\item{compare_var}{Character string giving the dimension along which
+prevalence is compared. Either \code{"rolling_period"} (the default; compare
+periods, i.e. change over time) or one of the variables in \code{by} (compare
+subgroups). Comparisons are always made \emph{within} the levels of all other
+variables in \code{by}. For example, with \code{by = c("gender", "region")} and
+\code{compare_var = "gender"}, men and women are compared within each region
+and period. (The period variable is always called \code{rolling_period} in the
+output, also when you define the periods with \code{periods}.)}
+
+\item{compare_to}{Defines the reference for the comparisons. One of:
+\itemize{
+\item \code{"first"} (the default): every level is compared with the first level
+(e.g. the earliest period).
+\item \code{"previous"}: every level is compared with the level immediately
+before it (e.g. the previous period).
+\item A character string giving a specific level of \code{compare_var}
+(e.g. \code{"2013-2015"}, a label from \code{periods}, or \code{"Female"}): every
+other level is compared with that level.
+}}
+
+\item{p_adjust}{Method for adjusting p-values for multiple comparisons.
+Any of \link[stats:p.adjust.methods]{stats::p.adjust.methods}, e.g. \code{"none"} (the default), \code{"holm"},
+\code{"bonferroni"} or \code{"BH"}. The adjustment is applied across all
+comparisons in \verb{$tests} (and separately across the trend tests in
+\verb{$trend}).}
+
+\item{trend}{Logical. If \code{TRUE} (the default), a linear trend test over
+the periods is calculated and returned in \verb{$trend}, together with the
+fitted trend line and its confidence interval in \verb{$fitted}. The trend is
+estimated separately for each combination of the \code{by} variables. At least
+three periods are required, so use \code{trend = FALSE} when you only define
+two periods with \code{periods}.}
 }
 \value{
-A data frame containing the prevalence estimates and confidence
-intervals produced by \code{\link[survey:svyby]{survey::svyby()}}. The prevalence estimate is the
-survey-weighted mean of \code{outcome_var}. For a 0/1 outcome this is equivalent
-to prevalence. Confidence interval columns are typically named \code{ci.2.5} and
-\code{ci.97.5} for a \eqn{95\%} confidence interval. The results are in precentage.
+A named list with four elements:
+\describe{
+\item{\code{estimates}}{A data.table with one row per period (and per
+combination of the \code{by} variables) and the columns
+\code{rolling_period}, the \code{by} variables, \code{prevalence} (percent),
+\code{se} (percentage points), \code{ci_lower}, \code{ci_upper} (percent) and \code{n}
+(unweighted number of observations).}
+\item{\code{tests}}{A data.table with one row per comparison (or \code{NULL} if
+\code{test = FALSE} or there is nothing to compare). Columns:
+the variables held fixed in the comparison (if any), \code{reference} and
+\code{compared} (the levels being compared), \code{prev_ref} and \code{prev_cmp}
+(prevalence in percent), \code{diff} (\code{prev_cmp - prev_ref} in percentage
+points), \code{diff_se}, \code{diff_ci_lower}, \code{diff_ci_upper}, \code{z}, \code{p_value},
+\code{p_adjusted} and \code{significant} (\code{TRUE} if \code{p_adjusted < 1 - ci_level}).}
+\item{\code{trend}}{A data.table with one row per combination of the \code{by}
+variables (or \code{NULL} if \code{trend = FALSE} or fewer than three periods are
+available). Columns: the \code{by} variables, \code{first_period}, \code{last_period},
+\code{n_periods}, \code{slope} (average change in percentage points per year),
+\code{slope_se}, \code{slope_ci_lower}, \code{slope_ci_upper}, \code{z}, \code{p_value},
+\code{p_adjusted}, \code{significant} and \code{direction} (\code{"increasing"},
+\code{"decreasing"} or \code{"no significant trend"}).}
+\item{\code{fitted}}{A data.table with the fitted trend line, one row per
+period (and per combination of the \code{by} variables), or \code{NULL} if
+\code{trend = FALSE} or no trend could be estimated. Columns: the \code{by}
+variables, \code{rolling_period}, \code{time} (the mean year of the period, used
+as the x value), \code{prevalence} (the observed estimate, percent),
+\code{fitted} (the value on the trend line, percent) and \code{lwr}, \code{upr} (the
+confidence interval for the fitted line, percent).}
+}
 }
 \description{
 Calculates survey-weighted prevalence estimates and confidence intervals
-for a binary outcome over single-year or rolling multi-year periods.
-Different analysis populations can be specified for different outcomes
-through the \code{denominator} variable.
+for a binary outcome over single years, rolling multi-year periods or
+user-defined groups of years, and (optionally) tests whether the prevalence
+differs significantly between periods or between subgroups, and whether
+there is a linear trend over time. Different analysis populations can be
+specified for different outcomes through the \code{denominator} variable.
 }
 \details{
-The \code{denominator} argument defines the analysis population for the
-selected outcome. Only observations with \code{denominator == 1} are used
-in the prevalence calculation. This allows different outcomes to have
-different eligible populations. For example, one outcome may be
-applicable to the entire survey population while another may only be
-applicable to a particular age group or other eligible population.
+\strong{Analysis population.} The \code{denominator} argument defines the analysis
+population for the selected outcome. Only observations with
+\code{denominator == 1} are used. The restriction is applied before missing
+outcomes are removed, periods are constructed and the survey design is
+created, so the denominator defines the population from which both the
+prevalence and its variance are estimated. Missing values in \code{denominator}
+cause an error. Observations with missing \code{outcome_var} are removed.
 
-The denominator variable is applied before missing outcomes are removed,
-rolling periods are constructed, and the survey design is created.
-Therefore, the denominator defines the population from which the
-prevalence and its variance are estimated.
+\strong{Survey design.} The design is constructed with \code{\link[survey:svydesign]{survey::svydesign()}}
+(with \code{nest = TRUE}). Estimates and variances come from \code{\link[survey:svyby]{survey::svyby()}}
+and \code{\link[survey:svymean]{survey::svymean()}}. When PSU and/or strata information are available
+they should be supplied so that the variance estimator accounts for the
+complex sampling design.
 
-The survey design is constructed using \code{\link[survey:svydesign]{survey::svydesign()}}. If \code{psu}
-is not supplied, \code{ids = ~1} is used, treating observations as independent
-sampling units. If \code{psu} is supplied, it is used as the primary sampling
-unit. If \code{strata} is supplied, it is used to account for stratification.
+\strong{Rolling periods.} With \code{rolling_year = 3}, the estimate for 2022 uses
+observations from 2020 through 2022. Only periods in which all calendar
+years are present in the data are created. Periods overlap, so one
+observation can contribute to several periods.
 
-The confidence intervals are based on the survey-design variance
-estimator used by \code{\link[survey:svymean]{survey::svymean()}} and \code{\link[survey:svyby]{survey::svyby()}}. They are
-therefore different from confidence intervals calculated using an
-effective sample size, such as
+\strong{Custom periods.} With \code{periods} you choose the groups of years
+yourself, for example to compare a baseline period with all later years.
+All observations from the listed years are pooled into one estimate for
+that period. Years listed in \code{periods} that are not in the (eligible) data
+give a warning; a period without any observations gives an error. Because
+the pooled estimate for a long period is a weighted average over its years,
+it is only comparable with another period if the survey weights are
+comparable across the years.
+
+\strong{Significance tests.} For each comparison the difference in prevalence
+between two estimates, \eqn{\hat{p}_2 - \hat{p}_1}, is tested with a
+Wald z-test:
 \deqn{
-SE = \sqrt{p(1-p)/n_{\mathrm{eff}}},
+z = \frac{\hat{p}_2 - \hat{p}_1}{\sqrt{V(\hat{p}_1) + V(\hat{p}_2) -
+2\,\mathrm{Cov}(\hat{p}_1, \hat{p}_2)}}.
 }
-where
-\deqn{
-n_{\mathrm{eff}} =
-\frac{(\sum w_i)^2}{\sum w_i^2}.
-}
+The covariance is taken from the survey design (via
+\code{svyby(..., covmat = TRUE)}). This matters for overlapping periods
+(rolling periods or overlapping \code{periods}), because they share
+observations and their estimates are therefore correlated; ignoring the
+covariance would give wrong standard errors. Each observation is kept as
+one sampling unit (or the PSU, if supplied) across all periods it appears
+in, which is what allows the covariance to be estimated. Confidence
+intervals for the differences use the same normal approximation and the
+level given by \code{ci_level}. The normal approximation is also what
+\code{\link[stats:confint]{stats::confint()}} uses for \code{svyby} objects, so the tests and the
+confidence intervals in \verb{$estimates} are consistent.
 
-When PSU and/or strata information are available from the original
-survey design, they should be supplied because they allow the variance
-estimator to account for the complex sample design.
+\strong{Trend test.} The trend is the slope of a straight line fitted to the
+prevalence estimates against the midpoint year of each period (the mean of
+the years in the period), so \code{slope} is the average change in percentage
+points per year. The line is fitted by generalized least squares using the
+full covariance matrix of the estimates from the survey design, which
+accounts for the overlap between periods (ordinary regression on
+overlapping estimates would treat them as independent and give far too
+small standard errors). The slope is tested with a Wald z-test. This is a
+test of a \emph{linear} trend; a non-linear development (e.g. flat and then
+rising) can still give a significant slope, so inspect the estimates as
+well. The trend is a separate question from the pairwise comparisons
+controlled by \code{compare_var}/\code{compare_to}.
 
-Rolling rolling_years are defined using calendar years. For example, with
-\code{rolling_year = 3}, the estimate for 2022 uses observations from 2020 through
-2022. With \code{rolling_year = 1}, each year is treated as its own estimation
-period.
+\strong{Fitted trend line.} \verb{$fitted} contains the value of the same GLS line
+at each period, \eqn{\hat{y}_t = \hat{\beta}_0 + \hat{\beta}_1 t}, with
+a confidence interval \eqn{\hat{y}_t \pm z \cdot SE(\hat{y}_t)}, where
+\eqn{SE(\hat{y}_t)} comes from the covariance matrix of the estimated
+coefficients. This is the confidence interval for the \emph{line} (the average
+development), in the same way as \code{predict(lm(...), interval = "confidence")};
+it is not a prediction interval for a single new estimate and it is not the
+same as the confidence interval of the observed prevalence in \verb{$estimates}.
+Because the line is not restricted, \code{lwr} and \code{upr} can fall below 0 or
+above 100 for very low or very high prevalence. The fitted values use
+exactly the same fit as the slope in \verb{$trend}, so the plotted line and the
+reported slope always agree. Unlike \code{lm()}, the fit uses the survey
+covariance matrix, so the line is not the same as an ordinary least-squares
+line through the period estimates.
 
-Note that rolling periods overlap. For example, an observation from
-2020 can contribute to the 2018--2020, 2019--2021, and 2020--2022
-estimates. The estimates from overlapping periods should therefore not
-be treated as statistically independent.
-
-Missing values in \code{denominator} are not treated as eligible and cause
-an error because the analysis population cannot be determined.
-Observations with missing values in \code{outcome_var} are removed because
-they cannot contribute to the prevalence estimate.
-
-The outcome must be coded as 0/1. For such an outcome, the
-survey-weighted mean is the prevalence of the outcome.
+\strong{Interpretation.} \code{significant = TRUE} means that the difference is
+statistically significant at level \code{1 - ci_level} after the chosen
+multiple-comparison adjustment. A statistically significant difference is
+not necessarily a large or important one; consider the size of \code{diff} and
+its confidence interval. When many comparisons are made, consider using
+\code{p_adjust}.
 }
 \examples{
-# Annual prevalence for an outcome with a specific denominator
-calc_prevalence(
+\dontrun{
+# Annual prevalence, change over time compared with the first year
+res <- calc_prevalence(
   data = dt,
   denominator = "eligible",
   year_var = "year",
@@ -135,18 +251,13 @@ calc_prevalence(
   weight_var = "weight",
   rolling_year = 1
 )
+res$estimates
+res$tests
+res$trend
+res$fitted   # fitted trend line with confidence interval, e.g. for plotting
 
-# Three-year rolling prevalence
-calc_prevalence(
-  data = dt,
-  denominator = "eligible",
-  year_var = "year",
-  outcome_var = "outcome",
-  weight_var = "weight",
-  rolling_year = 3
-)
-
-# Three-year rolling prevalence accounting for PSU and strata
+# Three-year rolling prevalence with PSU and strata, each period
+# compared with the previous one, Holm-adjusted p-values
 calc_prevalence(
   data = dt,
   denominator = "eligible",
@@ -155,10 +266,44 @@ calc_prevalence(
   weight_var = "weight",
   psu = "psu",
   strata = "stratum",
-  rolling_year = 3
+  rolling_year = 3,
+  compare_to = "previous",
+  p_adjust = "holm"
 )
 
-# Three-year rolling prevalence by region and gender
+# Custom periods: 2013-2015 compared with 2016-2025.
+# No new year column is needed. Only two periods, so no trend.
+calc_prevalence(
+  data = dt,
+  denominator = "eligible",
+  year_var = "year",
+  outcome_var = "outcome",
+  weight_var = "weight",
+  periods = list(
+    "2013-2015" = 2013:2015,
+    "2016-2025" = 2016:2025
+  ),
+  trend = FALSE
+)
+
+# Custom periods by gender: three periods, each compared with the
+# baseline period, with a trend over the three periods
+calc_prevalence(
+  data = dt,
+  denominator = "eligible",
+  year_var = "year",
+  outcome_var = "outcome",
+  weight_var = "weight",
+  by = "gender",
+  periods = list(
+    "2013-2016" = 2013:2016,
+    "2017-2020" = 2017:2020,
+    "2021-2025" = 2021:2025
+  ),
+  compare_to = "2013-2016"
+)
+
+# Compare genders within each rolling period
 calc_prevalence(
   data = dt,
   denominator = "eligible",
@@ -168,7 +313,17 @@ calc_prevalence(
   psu = "psu",
   strata = "stratum",
   by = c("region", "gender"),
-  rolling_year = 3
+  rolling_year = 3,
+  compare_var = "gender",
+  compare_to = "Male"
 )
+
+# Estimates only, no tests and no trend
+calc_prevalence(
+  data = dt, denominator = "eligible", year_var = "year",
+  outcome_var = "outcome", weight_var = "weight",
+  test = FALSE, trend = FALSE
+)$estimates
+}
 
 }

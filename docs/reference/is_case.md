@@ -60,9 +60,19 @@ dt <- data.table(
 
 # Single source variable
 is_case(dt, "var1", "case1")
-#> Error in is_case(dt, "var1", "case1"): could not find function "is_case"
+#>     var1  var2 case1
+#>    <num> <num> <int>
+#> 1:     1     0     1
+#> 2:     0     1     0
+#> 3:    NA     1     0
+#> 4:     0    NA     0
 
 # Multiple source variables
 is_case(dt, c("var1", "var2"), "case2")
-#> Error in is_case(dt, c("var1", "var2"), "case2"): could not find function "is_case"
+#>     var1  var2 case2
+#>    <num> <num> <int>
+#> 1:     1     0     1
+#> 2:     0     1     1
+#> 3:    NA     1     1
+#> 4:     0    NA     0
 ```
