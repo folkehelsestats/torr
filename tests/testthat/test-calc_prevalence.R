@@ -22,16 +22,18 @@ testthat::test_that("annual weighted prevalence matches weighted mean", {
     year_var = "year",
     outcome_var = "ltp_any",
     weight_var = "vekt2",
-    rolling_year = 1
+    rolling_year = 1,
+    test = FALSE,
+    trend = FALSE
   )
 
   expected <- round(with(dat, sum(ltp_any * vekt2) / sum(anypop * vekt2))*100, 1)
 
-  testthat::expect_equal(result$rolling_period, "2025-2025")
-  testthat::expect_equal(result$ltp_any, expected)
-  testthat::expect_true(all(c("ci_l", "ci_u") %in% names(result)))
-  testthat::expect_true(result$ci_l <= result$ltp_any)
-  testthat::expect_true(result$ci_u >= result$ltp_any)
+  testthat::expect_equal(result$estimates$rolling_period, "2025-2025")
+  testthat::expect_equal(result$estimates$prevalence, expected)
+  testthat::expect_true(all(c("ci_lower", "ci_upper") %in% names(result$estimates)))
+  testthat::expect_true(result$estimates$ci_lower <= result$estimates$prevalence)
+  testthat::expect_true(result$estimates$ci_upper >= result$estimates$prevalence)
 })
 
 
@@ -72,14 +74,15 @@ testthat::test_that("the supplied 2025 data give the expected weighted prevalenc
   )
 
   result <- torr::calc_prevalence(
-    dat, "anypop", "year", "ltp_any", "vekt2", rolling_year = 1
+    dat, "anypop", "year", "ltp_any", "vekt2", rolling_year = 1,
+    test = FALSE, trend = FALSE
   )
 
   # Weighted prevalence calculated directly from the supplied rows.
   expected <- round(with(dat, sum(ltp_any * vekt2) / sum(anypop * vekt2))*100,1)
 
-  testthat::expect_equal(result$ltp_any, expected)
-  testthat::expect_equal(result$ltp_any, 26.2)
+  testthat::expect_equal(result$estimates$prevalence, expected)
+  testthat::expect_equal(result$estimates$prevalence, 26.2)
 })
 
 
@@ -98,26 +101,26 @@ testthat::test_that("by supports gender, age group, and both together", {
 
   by_gender <- torr::calc_prevalence(
     dat, "anypop", "year", "ltp_any", "vekt2",
-    by = "kjonn", rolling_year = 1
+    by = "kjonn", rolling_year = 1, test = FALSE, trend = FALSE
   )
 
   by_age <- torr::calc_prevalence(
     dat, "anypop", "year", "ltp_any", "vekt2",
-    by = "agecat", rolling_year = 1
+    by = "agecat", rolling_year = 1, test = FALSE, trend = F
   )
 
   by_both <- torr::calc_prevalence(
     dat, "anypop", "year", "ltp_any", "vekt2",
-    by = c("kjonn", "agecat"), rolling_year = 1
+    by = c("kjonn", "agecat"), rolling_year = 1, test = F, trend = F
   )
 
-  testthat::expect_equal(nrow(by_gender), 2)
-  testthat::expect_equal(nrow(by_age), 2)
-  testthat::expect_equal(nrow(by_both), 4)
+  testthat::expect_equal(nrow(by_gender$estimates), 2)
+  testthat::expect_equal(nrow(by_age$estimates), 2)
+  testthat::expect_equal(nrow(by_both$estimates), 4)
 
   # Check one domain against a direct weighted mean.
   expected_male <- round(with(dat[kjonn == 1, ], sum(ltp_any * vekt2) / sum(vekt2))*100,1)
-  observed_male <- by_gender$ltp_any[by_gender$kjonn == 1]
+  observed_male <- by_gender$estimates$prevalence[by_gender$estimates$kjonn == 1]
 
   testthat::expect_equal(observed_male, expected_male)
 })
@@ -132,10 +135,10 @@ testthat::test_that("denominator excludes ineligible observations before estimat
   )
 
   result <- torr::calc_prevalence(
-    dat, "anypop", "year", "ltp_any", "vekt2", rolling_year = 1
+    dat, "anypop", "year", "ltp_any", "vekt2", rolling_year = 1, test = F, trend = F
   )
 
-  testthat::expect_equal(result$ltp_any, 50)
+  testthat::expect_equal(result$estimates$prevalence, 50)
 })
 
 
@@ -148,10 +151,10 @@ testthat::test_that("NULL weight_var produces an unweighted prevalence", {
 
   result <- torr::calc_prevalence(
     dat, "anypop", "year", "ltp_any", weight_var = NULL,
-    rolling_year = 1
+    rolling_year = 1, test = F, trend = F
   )
 
-  testthat::expect_equal(result$ltp_any, 50)
+  testthat::expect_equal(result$estimates$prevalence, 50)
 })
 
 
@@ -165,15 +168,15 @@ testthat::test_that("three-year rolling periods use consecutive calendar years",
 
   result <- torr::calc_prevalence(
     dat, "eligible", "year", "outcome", "weight",
-    rolling_year = 3
+    rolling_year = 3, trend = F, test = F
   )
 
   expected <- with(dat, sum(outcome * weight) / sum(weight))
 
-  testthat::expect_equal(nrow(result), 1)
-  testthat::expect_equal(result$rolling_period, "2023-2025")
-  testthat::expect_equal(result$outcome, round(expected * 100, 1))
-  testthat::expect_equal(result$outcome, 76.9)
+  testthat::expect_equal(nrow(result$estimates), 1)
+  testthat::expect_equal(result$estimates$rolling_period, "2023-2025")
+  testthat::expect_equal(result$estimates$prevalence, round(expected * 100, 1))
+  testthat::expect_equal(result$estimates$prevalence, 76.9)
 })
 
 
@@ -191,10 +194,10 @@ testthat::test_that("rolling periods overlap correctly", {
   )
 
   testthat::expect_equal(
-    result$rolling_period,
+    result$estimates$rolling_period,
     c("2020-2022", "2021-2023", "2022-2024")
   )
-  testthat::expect_equal(nrow(result), 3)
+  testthat::expect_equal(nrow(result$estimates), 3)
 })
 
 
@@ -208,12 +211,12 @@ testthat::test_that("missing calendar years are not silently bridged", {
 
   result <- torr::calc_prevalence(
     dat, "eligible", "year", "outcome", "weight",
-    rolling_year = 2
+    rolling_year = 2, test = F, trend = F
   )
 
   # 2020-2021 is incomplete; 2021-2022 is incomplete;
   # only 2022-2023 is a complete two-calendar-year period.
-  testthat::expect_equal(result$rolling_period, "2022-2023")
+  testthat::expect_equal(result$estimates$rolling_period, "2022-2023")
 })
 
 
@@ -314,11 +317,11 @@ testthat::test_that("missing outcome values are removed after denominator filter
 
   result <- torr::calc_prevalence(
     dat, "eligible", "year", "outcome", "weight",
-    rolling_year = 1
+    rolling_year = 1, test = F, trend = F
   )
 
 #   testthat::expect_equal(result$outcome, 0.5, tolerance = 1e-10)
-  testthat::expect_equal(result$outcome, 50)
+  testthat::expect_equal(result$estimates$prevalence, 50)
 })
 
 
@@ -334,10 +337,10 @@ testthat::test_that("PSU and strata can be supplied", {
 
   result <- torr::calc_prevalence(
     dat, "eligible", "year", "outcome", "weight",
-    psu = "psu", strata = "strata", rolling_year = 1
+    psu = "psu", strata = "strata", rolling_year = 1, test = F, trend = F
   )
 
-  testthat::expect_s3_class(result, c("data.table", "data.frame"))
-  testthat::expect_equal(nrow(result), 1)
-  testthat::expect_true(is.finite(result$outcome))
+  testthat::expect_s3_class(result$estimates, c("data.table", "data.frame"))
+  testthat::expect_equal(nrow(result$estimates), 1)
+  testthat::expect_true(is.finite(result$estimates$prevalence))
 })
