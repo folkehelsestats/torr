@@ -8,6 +8,8 @@
 #' variables have `label` and `labels` attributes.
 #' @param page Integer. Number of rows to display per page in the interactive table. Default is 25.
 #' @param save Logical value. Default is FALSE
+#' @param file Character scalar specifying the path and file name where the
+#'   output will be saved. The file name must end with `.html`.
 #' @return A `DT::datatable` object that can be rendered in R Markdown or Shiny or a stand alone HTML file.
 #'
 #' @details
@@ -29,9 +31,16 @@
 #' create_codebook(df)
 #' }
 #' @export
-create_codebook <- function(d, page = 25, save = FALSE) {
+create_codebook <- function(d, page = 25, save = FALSE, file = NULL) {
   df <- extract_attr(d)
 
+  if (!is.null(path)){
+    assert_parent_dir_exists(path)
+    save = TRUE
+  } else {
+    file = paste0(deparse(substitute(d)), ".html")
+  }
+  
   code <- DT::datatable(df, filter = "top",
                         escape = FALSE,
                         extensions = 'Buttons',
@@ -44,7 +53,7 @@ create_codebook <- function(d, page = 25, save = FALSE) {
 
   if (save){
     htmlwidgets::saveWidget(code,
-                            file = paste0(deparse(substitute(d)), ".html"),
+                            file = file,
                             selfcontained = TRUE)
   } else {
     return(code)
@@ -75,7 +84,9 @@ create_codebook <- function(d, page = 25, save = FALSE) {
 #' df <- read_spss("yourfile.sav")
 #' extract_attr(df)
 #' }
-#' @export
+#'
+#' @keywords internal
+#' @noRd
 extract_attr <- function(d) {
   vars <- names(d)
   labels <- sapply(d, function(x) attr(x, "label"))
@@ -92,4 +103,74 @@ extract_attr <- function(d) {
                          label = labels,
                          value_labels = value_labels
                          )
+}
+
+
+#' Assert that the output directory exists
+#'
+#' Internal helper that validates the parent directory of an output file.
+#' The output file itself does not need to exist. This function only
+#' verifies that its destination directory exists.
+#'
+#' Relative paths are normalized before validation, making the function
+#' safe to use with both Windows and Unix-style file paths.
+#'
+#' @param path Character scalar containing the path to an output file.
+#'
+#' @return Invisibly returns `TRUE` when the parent directory exists.
+#'
+#' @keywords internal
+#' @noRd
+assert_parent_dir_exists <- function(path) {
+
+  # Ensure a single non-empty character path was supplied
+  if (
+    missing(path) ||
+    is.null(path) ||
+    !is.character(path) ||
+    length(path) != 1L ||
+    !nzchar(path)
+  ) {
+    stop(
+      "`path` must be a non-empty character string.",
+      call. = FALSE
+    )
+  }
+
+  # Extract the parent directory from the supplied file path
+  dir_path <- base::dirname(path)
+
+  # Normalize the directory path to handle:
+  # - Relative paths (., ..)
+  # - Windows path separators (\)
+  # - Mixed path formats
+  dir_path <- base::normalizePath(
+    path = dir_path,
+    winslash = "/",
+    mustWork = FALSE
+  )
+
+  # Verify that the destination directory exists
+  if (!base::dir.exists(dir_path)) {
+    stop(
+      sprintf(
+        "Output directory does not exist: '%s'.",
+        dir_path
+      ),
+      call. = FALSE
+    )
+  }
+
+  # Extract and validate the file extension
+  if (tolower(tools::file_ext(path)) != "html") {
+    stop(
+      sprintf(
+        "Expected an '.html' file, but got: '%s'.",
+        path
+      ),
+      call. = FALSE
+    )
+  }
+
+  invisible(TRUE)
 }
