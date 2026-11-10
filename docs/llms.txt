@@ -41,9 +41,6 @@ pak::pkg_install("folkehelsestats/torr")
   [`create_narko_pop()`](https://github.com/folkehelsestats/torr/reference/create_narko_pop.md)
   Over Multiple Specifications
 
-- [`extract_attr()`](https://github.com/folkehelsestats/torr/reference/extract_attr.md)
-  : Extract variable metadata from a dataset
-
 - [`group_age()`](https://github.com/folkehelsestats/torr/reference/group_age.md)
   : Categorize Age Variable into Groups
 

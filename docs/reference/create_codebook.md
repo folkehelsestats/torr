@@ -7,7 +7,7 @@ attributes.
 ## Usage
 
 ``` r
-create_codebook(d, page = 25, save = FALSE)
+create_codebook(d, page = 25, save = FALSE, file = NULL)
 ```
 
 ## Arguments
@@ -25,6 +25,11 @@ create_codebook(d, page = 25, save = FALSE)
 - save:
 
   Logical value. Default is FALSE
+
+- file:
+
+  Character scalar specifying the path and file name where the output
+  will be saved. The file name must end with `.html`.
 
 ## Value
 

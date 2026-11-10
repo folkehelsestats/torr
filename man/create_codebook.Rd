@@ -4,7 +4,7 @@
 \alias{create_codebook}
 \title{Create an interactive codebook using DT}
 \usage{
-create_codebook(d, page = 25, save = FALSE)
+create_codebook(d, page = 25, save = FALSE, file = NULL)
 }
 \arguments{
 \item{d}{A data frame, typically imported with \code{haven} or similar, where
@@ -13,6 +13,9 @@ variables have \code{label} and \code{labels} attributes.}
 \item{page}{Integer. Number of rows to display per page in the interactive table. Default is 25.}
 
 \item{save}{Logical value. Default is FALSE}
+
+\item{file}{Character scalar specifying the path and file name where the
+output will be saved. The file name must end with \code{.html}.}
 }
 \value{
 A \code{DT::datatable} object that can be rendered in R Markdown or Shiny or a stand alone HTML file.
